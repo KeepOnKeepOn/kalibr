@@ -1,0 +1,25 @@
+<launch>
+    <arg name="compressed_stream" default="false" />
+    <arg name="playbag" default="false"/>
+    <arg name="image_src" default="/flir_adk/image_raw" />
+    <arg name="intrinsic_file" default="$(find kalibr_bringup)/config/cam.yaml"/>
+    <arg name="target_file" default="$(find kalibr_bringup)/config/target.yaml"/>
+    <arg name="imu_file" default="$(find kalibr_bringup)/config/cam.yaml"/>
+    <arg name="bag_file" default="$(find kalibr_bringup)/bagfiles/calib.bag" />
+
+    <!-- Play rosbag record -->
+    <node 
+        if="$(arg playbag)"
+        pkg="rosbag"
+        type="play"
+        name="player"
+        output="screen"
+        args="--clock --loop $(arg bag_file)" />
+
+    <node if="$(arg compressed_stream)" name="decompress" type="republish" pkg="image_transport" output="screen" 
+    args="compressed in:=$(arg image_src) raw out:=$(arg image_src)" />
+    <node name="kalibr" pkg="kalibr" type="kalibr_calibrate_imu_camera" output="screen" 
+    args="--target $(arg target_file) --cam $(arg intrinsic_file) --imu $(arg imu_file) --bag $(arg bag_file)" />
+    <!-- <node pkg="rviz" type="rviz" name="rviz_calibration" output="log" args="-d $(find calibration_bringup)/launch/display_camera_calibration.rviz"/> -->
+
+</launch>
